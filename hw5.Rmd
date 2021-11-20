@@ -120,7 +120,7 @@ homicide_df %>%
 
 
 ## Problem 2
-Iterate over file names and read in data for each subject.
+Create a dataframe, import data by iterating over file names and read in data for each subject.
 ```{r,message=FALSE}
 
 file_df = 
@@ -131,26 +131,36 @@ file_df =
   unnest()
 
 ```
-Tidy the result.
+Tidy the result-- manipulate file names to include control arm and subject ID.
 ```{r}
-file_df %>% 
+tidy_df=file_df %>% 
   select(-vec_file) %>% 
   pivot_longer(week_1:week_8,
                names_to = "week",
-               values_to = "data") 
+               values_to = "observation") %>% 
+ separate(file,c("arm","subject_id"),"_") %>% 
+ mutate(arm = case_when(arm == "con"~"Control Arm",
+                        arm == "exp"~"Experiment Arm"),
+         subject_id=str_replace(subject_id,".csv",""),
+         week = as.integer(str_replace(week,"week_","")),
+         arm =as.factor(arm))
+      
 ```
 
+Make a spaghetti plot showing observations on each subject over time
 
-
-
-
-
-
-  
-
-
-
-
+```{r}
+tidy_df %>% 
+  ggplot(aes(x = week, y = observation, color = subject_id)) + 
+  geom_point() + 
+  geom_line()+
+  facet_grid(.~arm)+
+  labs(title = "",
+       x="week",
+       y="observation",
+       caption ="Data from the a longitudinal study")
+```
+The observation value in the experiment arm is larger than the value in the control arm.
 
 
 ## Problem 3

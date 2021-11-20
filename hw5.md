@@ -141,7 +141,8 @@ homicide_df %>%
 
 ## Problem 2
 
-Iterate over file names and read in data for each subject.
+Create a dataframe, import data by iterating over file names and read in
+data for each subject.
 
 ``` r
 file_df = 
@@ -155,30 +156,40 @@ file_df =
     ## Warning: `cols` is now required when using unnest().
     ## Please use `cols = c(group)`
 
-Tidy the result.
+Tidy the result– manipulate file names to include control arm and
+subject ID.
 
 ``` r
-file_df %>% 
+tidy_df=file_df %>% 
   select(-vec_file) %>% 
   pivot_longer(week_1:week_8,
                names_to = "week",
-               values_to = "data") 
+               values_to = "observation") %>% 
+ separate(file,c("arm","subject_id"),"_") %>% 
+ mutate(arm = case_when(arm == "con"~"Control Arm",
+                        arm == "exp"~"Experiment Arm"),
+         subject_id=str_replace(subject_id,".csv",""),
+         week = as.integer(str_replace(week,"week_","")),
+         arm =as.factor(arm))
 ```
 
-    ## # A tibble: 160 × 3
-    ##    file       week    data
-    ##    <chr>      <chr>  <dbl>
-    ##  1 con_01.csv week_1  0.2 
-    ##  2 con_01.csv week_2 -1.31
-    ##  3 con_01.csv week_3  0.66
-    ##  4 con_01.csv week_4  1.96
-    ##  5 con_01.csv week_5  0.23
-    ##  6 con_01.csv week_6  1.09
-    ##  7 con_01.csv week_7  0.05
-    ##  8 con_01.csv week_8  1.94
-    ##  9 con_02.csv week_1  1.13
-    ## 10 con_02.csv week_2 -0.88
-    ## # … with 150 more rows
+Make a spaghetti plot showing observations on each subject over time
+
+``` r
+tidy_df %>% 
+  ggplot(aes(x = week, y = observation, color = subject_id)) + 
+  geom_point() + 
+  geom_line()+
+  facet_grid(.~arm)+
+  labs(title = "",
+       x="week",
+       y="observation",
+       caption ="Data from the a longitudinal study")
+```
+
+<img src="hw5_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" /> The
+observation value in the experiment arm is larger than the value in the
+control arm.
 
 ## Problem 3
 
