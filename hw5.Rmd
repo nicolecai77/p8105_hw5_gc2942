@@ -1,0 +1,143 @@
+---
+title: "HW5_gc2942"
+name: "Guiqi Cai"
+output: github_document
+---
+
+```{r setup,include=FALSE}
+library(tidyverse)
+library(p8105.datasets)
+library(viridis)
+knitr::opts_chunk$set(
+  fig.width =6,
+  fig.asp =0.6,
+  out.width = "90%"
+) 
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+```
+
+
+## Problem 1
+```{r}
+homicide_df = read.csv("./homicide-data.csv",na=c("","Unknown")) %>% 
+  mutate(city_state = str_c(city,state),
+  resolution =  case_when(disposition == "Closed without arrest"~"unsolved",
+            disposition =="Open/No arrest"~"unsolved",
+            disposition =="Closed by arrest"~"solved")) %>% 
+  relocate(city_state) %>% 
+  filter(city_state!= "TulsaAL")
+
+```
+
+
+```{r}
+baltimore_df = 
+  homicide_df %>% 
+  filter(city_state == "BaltimoreMD")
+
+baltimore_summary = 
+  baltimore_df %>% 
+  summarize(
+    unsolved = sum(resolution == "unsolved"),
+    n = n())
+
+baltimore_test = 
+  prop.test(
+  x = baltimore_summary %>% pull(unsolved),
+  n = baltimore_summary %>% pull(n))
+
+
+baltimore_test %>% 
+  broom::tidy()
+```
+
+
+```{r}
+prop_test_function = function(city_df){
+    city_summary = city_df %>% 
+    summarize(
+      unsolved = sum(resolution == "unsolved"),
+      n = n())
+  city_test = 
+  prop.test(
+  x = city_summary %>% pull(unsolved),
+  n = city_summary %>% pull(n))
+  
+  return(city_test)
+}
+
+
+prop_test_function(baltimore_df)
+
+homicide_df %>% 
+  filter(city_state=="AlbuquerqueNM") %>% 
+  prop_test_function()
+```
+
+Now, let's iterate across all cities.
+```{r}
+results_df=homicide_df %>% 
+  nest(data = uid:resolution) %>% 
+  mutate(test_results = map(data,prop_test_function),
+         tidy_results = map(test_results, broom::tidy)) %>% 
+  select(city_state,tidy_results) %>% 
+  unnest(tidy_results) %>% 
+  select(city_state,estimate,starts_with("conf"))
+                        
+```
+
+```{r}
+results_df %>% 
+  mutate(city_state = fct_reorder(city_state, estimate)) %>% 
+  ggplot(aes(x= city_state,y=estimate))+
+  geom_point()+
+  geom_errorbar(aes(ymin=conf.low,ymax=conf.high))+
+  theme(axis.text.x = element_text(angle=90,vjust=0.5,hjust=1))
+```
+Alternative way..
+```{r}
+homicide_df %>% 
+  group_by(city_state) %>% 
+  summarize(unsolved = sum (resolution =="unsolved"),
+            n=n()) %>% 
+  mutate(
+    test_results = map2(unsolved,n,prop.test),
+    tidy_results = map(test_results, broom::tidy)) %>% 
+  select(city_state,tidy_results) %>% 
+  unnest(tidy_results) %>% 
+  select(city_state,estimate,starts_with("conf"))
+```
+
+
+## Problem 2
+
+```{r}
+tibble(
+  files = list.files("./data"))
+```
+
+## Problem 3
+```{r}
+library(tidyverse)
+
+set.seed(10)
+
+iris_with_missing = iris %>% 
+  map_df(~replace(.x, sample(1:150, 20), NA)) %>%
+  mutate(Species = as.character(Species))
+```
+
+
+
+
+
