@@ -141,44 +141,44 @@ homicide_df %>%
 
 ## Problem 2
 
-``` r
-file_name= read_csv("./data/con_01.csv") %>% 
-  mutate(file_name= "control_arm_01") %>% 
-  relocate(file_name)
-```
-
-    ## Rows: 1 Columns: 8
-
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## dbl (8): week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8
-
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Iterate over file names and read in data for each subject.
 
 ``` r
-tibble(
-  file_name
-)
-```
-
-    ## # A tibble: 1 × 9
-    ##   file_name      week_1 week_2 week_3 week_4 week_5 week_6 week_7 week_8
-    ##   <chr>           <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>
-    ## 1 control_arm_01    0.2  -1.31   0.66   1.96   0.23   1.09   0.05   1.94
-
-``` r
-longitudinal_study = function(csv){
-  file= read_csv(csv) 
-  file_name = file %>% 
-              mutate(file_name = case_when(csv = starts_with("con") ~ "Control_group",
-                              name = starts_with("exp") ~ "Experience_group")) %>% 
-  relocate(file_name)
+file_df = 
   tibble(
-  files = list.files("./data"))
-}
+    file =list.files("./data") ,
+    vec_file = str_c("./data/",file)) %>% 
+  mutate(group = map(vec_file, read.csv)) %>% 
+  unnest()
 ```
+
+    ## Warning: `cols` is now required when using unnest().
+    ## Please use `cols = c(group)`
+
+Tidy the result.
+
+``` r
+file_df %>% 
+  select(-vec_file) %>% 
+  pivot_longer(week_1:week_8,
+               names_to = "week",
+               values_to = "data") 
+```
+
+    ## # A tibble: 160 × 3
+    ##    file       week    data
+    ##    <chr>      <chr>  <dbl>
+    ##  1 con_01.csv week_1  0.2 
+    ##  2 con_01.csv week_2 -1.31
+    ##  3 con_01.csv week_3  0.66
+    ##  4 con_01.csv week_4  1.96
+    ##  5 con_01.csv week_5  0.23
+    ##  6 con_01.csv week_6  1.09
+    ##  7 con_01.csv week_7  0.05
+    ##  8 con_01.csv week_8  1.94
+    ##  9 con_02.csv week_1  1.13
+    ## 10 con_02.csv week_2 -0.88
+    ## # … with 150 more rows
 
 ## Problem 3
 
@@ -209,5 +209,5 @@ fill_in_missing = function(x){
 ```
 
 ``` r
-output = map(iris_with_missing,fill_in_missing)
+output = map_df(iris_with_missing,fill_in_missing)
 ```

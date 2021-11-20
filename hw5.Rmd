@@ -6,8 +6,8 @@ output: github_document
 
 ```{r setup,include=FALSE}
 library(tidyverse)
-library(p8105.datasets)
 library(viridis)
+library(purrr)
 knitr::opts_chunk$set(
   fig.width =6,
   fig.asp =0.6,
@@ -120,34 +120,37 @@ homicide_df %>%
 
 
 ## Problem 2
+Iterate over file names and read in data for each subject.
+```{r,message=FALSE}
 
-```{r}
-file_name= read_csv("./data/con_01.csv") %>% 
-  mutate(file_name= "control_arm_01") %>% 
-  relocate(file_name)
-
-tibble(
-  file_name
-)
-
-
-
-
-longitudinal_study = function(csv){
-  file= read_csv(csv) 
-  file_name = file %>% 
-              mutate(file_name = case_when(csv = starts_with("con") ~ "Control_group",
-                              name = starts_with("exp") ~ "Experience_group")) %>% 
-  relocate(file_name)
+file_df = 
   tibble(
-  files = list.files("./data"))
-}
+    file =list.files("./data") ,
+    vec_file = str_c("./data/",file)) %>% 
+  mutate(group = map(vec_file, read.csv)) %>% 
+  unnest()
 
 ```
-
+Tidy the result.
 ```{r}
-
+file_df %>% 
+  select(-vec_file) %>% 
+  pivot_longer(week_1:week_8,
+               names_to = "week",
+               values_to = "data") 
 ```
+
+
+
+
+
+
+
+  
+
+
+
+
 
 
 ## Problem 3
@@ -177,7 +180,7 @@ fill_in_missing = function(x){
 
 
 ```{r}
-output = map(iris_with_missing,fill_in_missing)
+output = map_df(iris_with_missing,fill_in_missing)
 ```
 
 
