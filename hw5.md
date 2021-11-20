@@ -142,33 +142,43 @@ homicide_df %>%
 ## Problem 2
 
 ``` r
-tibble(
-  files = list.files("./data"))
+file_name= read_csv("./data/con_01.csv") %>% 
+  mutate(file_name= "control_arm_01") %>% 
+  relocate(file_name)
 ```
 
-    ## # A tibble: 20 × 1
-    ##    files     
-    ##    <chr>     
-    ##  1 con_01.csv
-    ##  2 con_02.csv
-    ##  3 con_03.csv
-    ##  4 con_04.csv
-    ##  5 con_05.csv
-    ##  6 con_06.csv
-    ##  7 con_07.csv
-    ##  8 con_08.csv
-    ##  9 con_09.csv
-    ## 10 con_10.csv
-    ## 11 exp_01.csv
-    ## 12 exp_02.csv
-    ## 13 exp_03.csv
-    ## 14 exp_04.csv
-    ## 15 exp_05.csv
-    ## 16 exp_06.csv
-    ## 17 exp_07.csv
-    ## 18 exp_08.csv
-    ## 19 exp_09.csv
-    ## 20 exp_10.csv
+    ## Rows: 1 Columns: 8
+
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (8): week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8
+
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+tibble(
+  file_name
+)
+```
+
+    ## # A tibble: 1 × 9
+    ##   file_name      week_1 week_2 week_3 week_4 week_5 week_6 week_7 week_8
+    ##   <chr>           <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>
+    ## 1 control_arm_01    0.2  -1.31   0.66   1.96   0.23   1.09   0.05   1.94
+
+``` r
+longitudinal_study = function(csv){
+  file= read_csv(csv) 
+  file_name = file %>% 
+              mutate(file_name = case_when(csv = starts_with("con") ~ "Control_group",
+                              name = starts_with("exp") ~ "Experience_group")) %>% 
+  relocate(file_name)
+  tibble(
+  files = list.files("./data"))
+}
+```
 
 ## Problem 3
 
@@ -180,4 +190,24 @@ set.seed(10)
 iris_with_missing = iris %>% 
   map_df(~replace(.x, sample(1:150, 20), NA)) %>%
   mutate(Species = as.character(Species))
+```
+
+I fill in missing values with the mean of non-missing values for numeric
+variables, and fill in missing values with “virginica” for character
+variables.
+
+``` r
+fill_in_missing = function(x){
+  if (is.numeric(x)){
+    x=replace(x,is.na(x),mean(x,na.rm=TRUE))
+  } 
+  if (is.character(x)){
+     x=replace(x,is.na(x), "virginica") 
+  }
+  return(x)
+}
+```
+
+``` r
+output = map(iris_with_missing,fill_in_missing)
 ```

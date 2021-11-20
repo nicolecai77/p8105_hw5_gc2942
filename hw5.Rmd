@@ -122,9 +122,33 @@ homicide_df %>%
 ## Problem 2
 
 ```{r}
+file_name= read_csv("./data/con_01.csv") %>% 
+  mutate(file_name= "control_arm_01") %>% 
+  relocate(file_name)
+
 tibble(
+  file_name
+)
+
+
+
+
+longitudinal_study = function(csv){
+  file= read_csv(csv) 
+  file_name = file %>% 
+              mutate(file_name = case_when(csv = starts_with("con") ~ "Control_group",
+                              name = starts_with("exp") ~ "Experience_group")) %>% 
+  relocate(file_name)
+  tibble(
   files = list.files("./data"))
+}
+
 ```
+
+```{r}
+
+```
+
 
 ## Problem 3
 ```{r}
@@ -137,7 +161,24 @@ iris_with_missing = iris %>%
   mutate(Species = as.character(Species))
 ```
 
+I fill in missing values with the mean of non-missing values for numeric variables, and fill in missing values with "virginica" for character variables.
 
+```{r}
+fill_in_missing = function(x){
+  if (is.numeric(x)){
+    x=replace(x,is.na(x),mean(x,na.rm=TRUE))
+  } 
+  if (is.character(x)){
+     x=replace(x,is.na(x), "virginica") 
+  }
+  return(x)
+}
+```
+
+
+```{r}
+output = map(iris_with_missing,fill_in_missing)
+```
 
 
 
