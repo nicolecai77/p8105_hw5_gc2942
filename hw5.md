@@ -153,9 +153,6 @@ file_df =
   unnest()
 ```
 
-    ## Warning: `cols` is now required when using unnest().
-    ## Please use `cols = c(group)`
-
 Tidy the result– manipulate file names to include control arm and
 subject ID.
 
